@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <title>Feeds</title>
+</head>
+<body>
+    <h1>welcome {{uname}}</h1>
+    <button id="lgot" type="button" onclick="location.href = '/logout/';">Logout</button>
+    <button id="myposts" onclick="location.href = '/profile/'" type="button">My Posts</button>
+    <button type="button" id="lin" onclick="location.href = '/login/'">Login</button>
+    {% for objects in posts %}
+    <table id="tble_{{objects.id}}" align="center">
+        <tr>
+            <td style="float: left; width: 300px; font-size: 16px;" colspan="2">{{objects.user}}</td>
+        </tr>
+        <tr>
+            <td colspan="2">{{objects.description}}</td>
+        </tr>
+        <tr id="onlylogin_{{objects.id}}">
+            <td style="width: 150px;"><button id="lik_{{objects.id}}" onclick="addLike(this.id)" type="button">Like</button><div id="likcount_{{objects.id}}">0</div></td>
+            <td><input id="comm_{{objects.id}}" class="comment" type="text">
+                <button id="commbi_{{objects.user.id}}" class="commbt{{objects.id}}" onclick="addComment(this.className, this.id)" type="button">comment</button></td>
+        </tr>
+        <tr>
+            <td>Comments:</td>
+        </tr>
+        {% for comment in objects.comments reversed %}
+        <tr>
+            <td>{{comment.user}}</td><td>{{comment.comment}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <hr width="700px">
+    {% endfor %}
+    <script>
+        document.body.onload(posts())
+        function posts(){
+            let status = '{{loginstatus}}';
+            if(status === 'false'){
+                document.getElementById('lgot').style.display = 'none';
+                document.getElementById('myposts').style.display = 'none';
+                {% for post in posts %}
+                {% for likes in post.likes %}
+                var count = document.getElementById('likcount_{{post.id}}').innerHTML;
+                document.getElementById('lik_{{post.id}}').innerHTML = 'Liked';
+                count = Number(count) + 1;
+                document.getElementById('likcount_{{post.id}}').innerHTML = count;
+                {% endfor %}
+                document.getElementById('onlylogin_{{post.id}}').style.display = 'none';
+                {% endfor %}
+            }else{
+                {% for post in posts %}
+                {% for likes in post.likes %}
+                var count = document.getElementById('likcount_{{post.id}}').innerHTML;
+                console.log("{{likes.user.id}}");
+                {% if likes.user.id == uid %}
+                document.getElementById('lik_{{post.id}}').innerHTML = 'Liked';
+                {% endif %}
+                count = Number(count) + 1;
+                document.getElementById('likcount_{{post.id}}').innerHTML = count;
+                {% endfor %}
+                {% endfor %}
+                document.getElementById('lin').style.display = 'none';
+            }
+        }
+        
+        function addLike(cl){
+            if (document.querySelector("#"+cl).innerHTML === 'Liked'){
+                var count = Number(document.getElementById("likcount_"+cl.substring(4,cl.length)).innerHTML)-1;
+                document.getElementById("likcount_"+cl.substring(4,cl.length)).innerHTML = count;
+                let id = cl.substring(4,cl.length);
+                $.ajax({
+                    type:"GET",
+                    url:"/likepost/",
+                    data:{idd:id, status:0}
+                })
+                document.querySelector("#"+cl).innerHTML = 'Like';
+            }else{
+                var count = Number(document.getElementById("likcount_"+cl.substring(4,cl.length)).innerHTML)+1;
+                document.getElementById("likcount_"+cl.substring(4,cl.length)).innerHTML = count;
+                let id = cl.substring(4,cl.length);
+                $.ajax({
+                    type:"GET",
+                    url:"/likepost/",
+                    data:{idd:id, status:1, posterid:"{{uid}}"}
+                })
+                document.querySelector("#"+cl).innerHTML = 'Liked';
+            }
+        }
+
+        function addComment(cls, cid){
+            console.log(cid.substring(7, cid.length));
+            $.ajax({
+                type:"GET",
+                url:"/commentpost/",
+                data:{
+                    postid: cls.substring(6, cls.length),
+                    posterid: "{{uid}}",
+                    comment: document.getElementById('comm_'+cls.substring(6, cls.length)).value
+                }
+            })
+            var table = document.getElementById('tble_'+cls.substring(6, cls.length));
+            let rw = table.insertRow(4);
+            rw.insertCell(0).innerHTML = '{{uname}}';
+            rw.insertCell(1).innerHTML = document.getElementById('comm_'+cls.substring(6, cls.length)).value;
+        }
+    </script>
+</body>
+</html>

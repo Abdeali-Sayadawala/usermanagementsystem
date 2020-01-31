@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% load staticfiles %}
+    <title>Register</title>
+</head>
+<body>
+    <h1 align="center">Register</h1>
+    <form id="frm" action="" method="post" onsubmit="return(val());">{% csrf_token %}
+        <table align="center">
+            <tr>
+                <td>Full Name:</td><td><input type="text" id="name" name="fname"></td><td><div id="error" class="name"></div></td>
+            </tr>
+            <tr>
+                <td>E-mail:</td><td><input type="text" id="mail" name="email"></td><td><div id="error" class="mail"></div></td>
+            </tr>
+            <tr>
+                <td>Password:</td><td><input type="password" id="pass" name="pass"></td><td><div id="error" class="pass"></div></td>
+            </tr>
+            <tr>
+                <td>Confirm Password:</td><td><input type="password" id="cpass" name='cpass'></td><td><div id="error" class="cpass"></div></td>
+            </tr>
+            <tr>
+                <td>Mobile Number:</td><td><input title="enter 10 didgit mobile number" type="number" id="mobile" name="mobile" min="10"></td><td><div id="error" class="num"></div></td>
+            </tr>
+            <tr>
+                <td><button id="submit" type="submit">Register</button></td><td><button type="button" onclick="location.href='/login/'">Login</button></td>
+            </tr>
+        </table>
+    </form>
+    <script src={% static 'js/index.js' %}></script>
+</body>
+</html>
