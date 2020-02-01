@@ -3,3 +3,4 @@ venv/
 system/migrations
 system/__pycache__
 usermanagement/__pycache__
+issues.txt

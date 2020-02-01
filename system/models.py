@@ -13,9 +13,14 @@ class Person(models.Model):
 class Like(models.Model):
     user = models.ForeignKey(Person, default=1, on_delete=models.SET_DEFAULT)
 
+class Likecomments(models.Model):
+    user = models.ForeignKey(Person, default=1, on_delete=models.SET_DEFAULT)
+
 class Comment(models.Model):
+    cid = models.IntegerField()
     user = models.ForeignKey(Person, default=1, on_delete=models.SET_DEFAULT)
     comment = models.CharField(max_length=120)
+    likes = ArrayModelField(null=False, model_container=Likecomments)
 
 class Post(models.Model):
     user = models.ForeignKey(Person, default=1, on_delete=models.SET_DEFAULT)

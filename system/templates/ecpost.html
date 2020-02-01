@@ -33,7 +33,13 @@
             <td colspan="2"><div id="postdata_{{objects.id}}">{{objects.description}}</div></td>
         </tr>
         <tr id="onlylogin_{{objects.id}}">
-            <td style="width: 150px;"><button id="lik_{{objects.id}}" onclick="addLike(this.id)" type="button">Like</button><div id="likcount_{{objects.id}}">0</div></td>
+            <td style="width: 150px;"><button style="cursor: pointer;" id="lik_{{objects.id}}" onclick="addLike(this.id)" type="button">Like</button>
+                <div style="cursor: pointer;" id="likcount_{{objects.id}}" onclick="showlikes(this.id)">0</div>
+                <div align="center" id="likeusers_{{objects.id}}">
+                    {% for like in objects.likes reversed %}
+                        {{like.user}} <br>
+                    {% endfor %}
+                </div></td>
             <td><input id="comm_{{objects.id}}" class="comment" type="text">
                 <button id="commbi_{{objects.user.id}}" class="commbt{{objects.id}}" onclick="addComment(this.className, this.id)" type="button">comment</button></td>
         </tr>
@@ -42,7 +48,17 @@
         </tr>
         {% for comment in objects.comments reversed %}
         <tr>
-            <td>{{comment.user}}</td><td>{{comment.comment}}</td>
+            <td>{{comment.user}}</td><td>{{comment.comment}}
+                <div id="commentliklogin_{{comment.cid}}_{{objects.id}}" style="float: right;">
+                    <button id="commlike_{{comment.cid}}_{{objects.id}}" onclick="addcommlike(this.id)" >Like</button>
+                    <div id="commlikecnt_{{comment.cid}}_{{objects.id}}" onclick="showcommlike(this.id)" style="cursor: pointer; float: right;">0</div>
+                    <div id="comlikeuser_{{comment.cid}}_{{objects.id}}" align="center">
+                        {% for like in comment.likes reversed %}
+                            {{like.user}} <br>
+                        {% endfor %}
+                    </div>
+                </div>
+            </td>
         </tr>
         {% endfor %}
     </table>
@@ -77,6 +93,18 @@
                 count = Number(count) + 1;
                 document.getElementById('likcount_{{post.id}}').innerHTML = count;
                 {% endfor %}
+                document.getElementById('likeusers_{{post.id}}').style.display = 'none';
+                {% for comment in post.comments %}
+                {% for like in comment.likes %}
+                var count = document.getElementById("commlikecnt_{{comment.cid}}_{{post.id}}").innerHTML;
+                count = Number(count) + 1;
+                document.getElementById("commlikecnt_{{comment.cid}}_{{post.id}}").innerHTML = count;
+                {% if like.user.id == uid %}
+                document.getElementById("commlike_{{comment.cid}}_{{post.id}}").innerHTML = 'Liked';
+                {% endif %}
+                {% endfor %}
+                document.getElementById("comlikeuser_{{comment.cid}}_{{post.id}}").style.display = "none";
+                {% endfor %}
                 {% endfor %}
                 // document.getElementById('lin').style.display = 'none';
             }
@@ -86,6 +114,15 @@
             if(document.getElementById("newpostcreate").value == ''){
                 document.getElementById("newposterr").innerHTML = 'Please enter something.';
                 return false;
+            }
+        }
+
+        function showlikes(luid){
+            var id =  luid.substring(9, luid.length);
+            if (document.getElementById('likeusers_'+id).style.display === 'block'){
+                document.getElementById('likeusers_'+id).style.display = 'none';   
+            }else if(document.getElementById('likeusers_'+id).style.display === 'none'){
+                document.getElementById('likeusers_'+id).style.display = 'block';
             }
         }
 
@@ -130,7 +167,7 @@
                 $.ajax({
                     type:"GET",
                     url:"/likepost/",
-                    data:{idd:id, status:0}
+                    data:{idd:id, status:0, posterid:"{{uid}}"}
                 })
                 document.querySelector("#"+cl).innerHTML = 'Like';
             }else{
@@ -161,6 +198,42 @@
             let rw = table.insertRow(4);
             rw.insertCell(0).innerHTML = '{{uname}}';
             rw.insertCell(1).innerHTML = document.getElementById('comm_'+cls.substring(6, cls.length)).value;
+        }
+        function showcommlike(scid){
+            var comid = scid.split("_")[1];
+            var pid = scid.split("_")[2];
+            if(document.getElementById("comlikeuser_"+comid+"_"+pid).style.display === "none"){
+                document.getElementById("comlikeuser_"+comid+"_"+pid).style.display = "block";
+            }else if(document.getElementById("comlikeuser_"+comid+"_"+pid).style.display === "block"){
+                document.getElementById("comlikeuser_"+comid+"_"+pid).style.display = "none";
+            }
+            
+        }
+
+        function addcommlike(clid){
+            var commid = clid.split('_')[1];
+            var posid = clid.split('_')[2];
+            if (document.getElementById(clid).innerHTML === 'Like'){
+                $.ajax({
+                    type:"GET",
+                    url:"/likecomment/",
+                    data:{commid:commid, posid:posid, status:1, likerid:"{{uid}}"}
+                })
+                document.getElementById(clid).innerHTML = 'Liked';
+                var count = document.getElementById("commlikecnt_"+commid+"_"+posid).innerHTML;
+                count = Number(count) + 1;
+                document.getElementById("commlikecnt_"+commid+"_"+posid).innerHTML = count;
+            }else if(document.getElementById(clid).innerHTML === 'Liked'){
+                $.ajax({
+                    type:"GET",
+                    url:"/likecomment/",
+                    data:{commid:commid, posid:posid, status:0, likerid:"{{uid}}"}
+                })
+                document.getElementById(clid).innerHTML = 'Like';
+                var count = document.getElementById("commlikecnt_"+commid+"_"+posid).innerHTML;
+                count = Number(count) - 1;
+                document.getElementById("commlikecnt_"+commid+"_"+posid).innerHTML = count;
+            }
         }
     </script>
 </body>

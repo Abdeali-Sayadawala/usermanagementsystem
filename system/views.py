@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import Person, Post, Comment, Like
+from .models import Person, Post, Comment, Like, Likecomments
 from passlib.hash import pbkdf2_sha256
 from usermanagement.settings import EMAIL_HOST_USER
 from django.core.mail import send_mail
@@ -84,9 +84,6 @@ def usrposts(request):
 
 def likepost(request):
     if request.method == 'GET':
-        print(request.GET['idd'])
-        print(request.GET['status'])
-        # print(request.GET['posterid'])
         if request.GET['status'] == '1':
             likeobj = Like.objects.create(
                 user = Person.objects.get(id = request.GET['posterid'])
@@ -97,15 +94,47 @@ def likepost(request):
             pass
         elif request.GET['status'] == '0':
             postobj = Post.objects.get(id = request.GET['idd'])
-            postobj.likes.pop()
+            likeobj = postobj.likes
+            for obj in likeobj:
+                if obj.user.id == int(request.GET['posterid']):
+                    postobj.likes.pop(likeobj.index(obj))
             postobj.save()
         return HttpResponse()
 
-def commentpost(request):
+def likecomment(request):
     if request.method == 'GET':
+        if request.GET['status'] == '1':
+            likecomobj = Likecomments.objects.create(
+                user = Person.objects.get(id = request.GET['likerid'])
+            )
+            postobj = Post.objects.get(id = request.GET['posid'])
+            for comment in postobj.comments:
+                if comment.cid == int(request.GET['commid']):
+                    comment.likes.append(likecomobj)
+            postobj.save()
+        if request.GET['status'] == '0':
+            postobj = Post.objects.get(id = request.GET['posid'])
+            for comment in postobj.comments:
+                if comment.cid == int(request.GET['commid']):
+                    for like in comment.likes:
+                        if like.user.id == int(request.GET['likerid']):
+                            comment.likes.pop(comment.likes.index(like))
+            postobj.save()
+    return HttpResponse()
+
+def commentpost(request):
+    likes = []
+    if request.method == 'GET':
+        commobj = Post.objects.get(id = request.GET['postid']).comments
+        if commobj == []:
+            cid = 1
+        else:
+            cid = commobj[len(commobj)-1].cid + 1
         commentobj = Comment.objects.create(
+            cid = cid,
             user = Person.objects.get(id = request.GET['posterid']),
-            comment = request.GET['comment']
+            comment = request.GET['comment'],
+            likes = likes
         )
         postobj = Post.objects.get(id = request.GET['postid'])
         postobj.comments.append(commentobj)
@@ -113,7 +142,7 @@ def commentpost(request):
         print(Person.objects.get(id = request.GET['posterid']).fullname)
         print(Post.objects.get(id = request.GET['postid']).description)
         print(request.GET['comment'])
-        return HttpResponse()
+    return HttpResponse()
 
 def editpost(request):
     try:

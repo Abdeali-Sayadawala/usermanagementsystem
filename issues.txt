@@ -1,3 +1,0 @@
-add comment likes
-view likes in both comment and posts
-total user numbers
