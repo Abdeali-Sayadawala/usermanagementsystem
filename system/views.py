@@ -74,12 +74,13 @@ def logout(request):
 
 def usrposts(request):
     objposts = Post.objects.all()
+    userlen = len(Person.objects.all())
     try:
         usrsession = request.session['name']
         usrsessionid = request.session['id']
-        return render(request, 'userhome.html', {'uname':usrsession, 'uid':usrsessionid, 'loginstatus':'true', 'posts':objposts})
+        return render(request, 'userhome.html', {'uname':usrsession, 'userlen':userlen, 'uid':usrsessionid, 'loginstatus':'true', 'posts':objposts})
     except:
-        return render(request, 'userhome.html', {'uname':'Anonymous User', 'uid':'0', 'loginstatus':'false', 'posts':objposts})
+        return render(request, 'userhome.html', {'uname':'Anonymous User', 'userlen':userlen, 'uid':'0', 'loginstatus':'false', 'posts':objposts})
 
 def likepost(request):
     if request.method == 'GET':
